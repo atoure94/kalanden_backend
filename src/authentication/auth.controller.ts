@@ -10,67 +10,90 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  @ApiOperation({ summary: 'Login with phone and password' })
+  @ApiOperation({ summary: 'Login with email and password' })
   @ApiBody({ type: LoginDto })
-  @ApiResponse({ status: 200, description: 'User authenticated with JWT', schema: {
-    example: {
-      access_token: 'jwt.token.here',
-      user: {
-        id: 1,
-        firstName: 'John',
-        lastName: 'Doe',
-        phone: '12345',
-        createdAt: '2024-08-06T12:00:00.000Z'
-      }
-    }
-  }})
+  @ApiResponse({
+    status: 200,
+    description: 'User authenticated with JWT',
+    schema: {
+      example: {
+        access_token: 'jwt.token.here',
+        user: {
+          id: 1,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+          createdAt: '2024-08-06T12:00:00.000Z',
+        },
+      },
+    },
+  })
   async login(@Body() body: LoginDto) {
-    return this.authService.login(body.phone, body.password);
+    return this.authService.login(body.email, body.password);
   }
 
   @Post('signup')
-  @ApiOperation({ summary: 'Signup with phone and password (hashed)' })
+  @ApiOperation({ summary: 'Signup with email and password (hashed)' })
   @ApiBody({ type: CreateUserDto })
-  @ApiResponse({ status: 201, description: 'User created with JWT', schema: {
-  example: {
-    access_token: 'jwt.token.here',
-    user: {
-      id: 1,
-      firstName: 'John',
-      lastName: 'Doe',
-      phone: 33612345678,
-      createdAt: '2024-08-06T12:00:00.000Z'
-    }
-  }
-}})
+  @ApiResponse({
+    status: 201,
+    description: 'User created with JWT',
+    schema: {
+      example: {
+        access_token: 'jwt.token.here',
+        user: {
+          id: 1,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+          createdAt: '2024-08-06T12:00:00.000Z',
+        },
+      },
+    },
+  })
   async signup(@Body() body: CreateUserDto) {
     return this.authService.signup(body);
   }
+
   @Post('verify-otp')
-@ApiOperation({ summary: 'Vérifie le code OTP' })
-@ApiBody({ schema: { example: { phone: '33612345678', otp: '123456' } } })
-async verifyOtp(@Body() body: { phone: string, otp: string }) {
-  return this.authService.verifyOtp(body.phone, body.otp);
-}
+  @ApiOperation({ summary: 'Vérifie le code OTP envoyé par e-mail' })
+  @ApiBody({
+    schema: { example: { email: 'john.doe@example.com', otp: '123456' } },
+  })
+  async verifyOtp(@Body() body: { email: string; otp: string }) {
+    return this.authService.verifyOtp(body.email, body.otp);
+  }
 
-@Post('resend-otp')
-@ApiOperation({ summary: 'Renvoyer un nouveau code OTP' })
-@ApiBody({ schema: { example: { phone: '33612345678' } } })
-async resendOtp(@Body() body: { phone: string }) {
-  return this.authService.resendOtp(body.phone);
-}
+  @Post('resend-otp')
+  @ApiOperation({ summary: 'Renvoyer un nouveau code OTP par e-mail' })
+  @ApiBody({
+    schema: { example: { email: 'john.doe@example.com' } },
+  })
+  async resendOtp(@Body() body: { email: string }) {
+    return this.authService.resendOtp(body.email);
+  }
 
-@Post('forgot-password')
-@ApiOperation({ summary: 'Demande de réinitialisation du mot de passe (envoi OTP)' })
-@ApiBody({ schema: { example: { phone: '33612345678' } } })
-async forgotPassword(@Body() body: { phone: string }) {
-  return this.authService.forgotPassword(body.phone);
-}
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Demande de réinitialisation du mot de passe (envoi OTP par e-mail)' })
+  @ApiBody({
+    schema: { example: { email: 'john.doe@example.com' } },
+  })
+  async forgotPassword(@Body() body: { email: string }) {
+    return this.authService.forgotPassword(body.email);
+  }
 
-@Post('reset-password')
-@ApiOperation({ summary: 'Réinitialisation du mot de passe avec OTP' })
-@ApiBody({ schema: { example: { phone: '33612345678', otp: '123456', newPassword: 'newpass123' } } })
-async resetPassword(@Body() body: { phone: string, otp: string, newPassword: string }) {
-  return this.authService.resetPassword(body.phone, body.otp, body.newPassword);
-}
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Réinitialisation du mot de passe avec OTP (par e-mail)' })
+  @ApiBody({
+    schema: {
+      example: {
+        email: 'john.doe@example.com',
+        otp: '123456',
+        newPassword: 'newpass123',
+      },
+    },
+  })
+  async resetPassword(@Body() body: { email: string; otp: string; newPassword: string }) {
+    return this.authService.resetPassword(body.email, body.otp, body.newPassword);
+  }
 }

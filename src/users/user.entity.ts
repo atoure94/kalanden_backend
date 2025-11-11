@@ -9,8 +9,9 @@ import {
 
 export enum UserRole {
   ADMIN = 'admin',
-  CLIENT = 'client',
-  COURSIER = 'coursier',
+  PROFESSEURS = 'professeurs',
+  ELEVE = 'eleve',
+  PARENT = 'parent',
 }
 
 @Entity()
@@ -27,6 +28,10 @@ export class Users {
   @Column()
   lastName: string;
 
+  @ApiProperty({ example: 'john.doe@example.com' })
+  @Column({ unique: true })
+  email: string;
+
   @ApiProperty({ example: '3361234' })
   @Column({ unique: true })
   phone: string;
@@ -35,8 +40,8 @@ export class Users {
   @Column()
   password: string;
 
-  @ApiProperty({ example: 'client', enum: UserRole })
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.CLIENT })
+  @ApiProperty({ example: 'parent', enum: UserRole })
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.PARENT })
   role: UserRole;
 
 

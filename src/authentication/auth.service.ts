@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../users/user.service';
 import * as bcrypt from 'bcrypt';
@@ -14,17 +19,17 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async validateUser(phone: string, password: string): Promise<Users> {
-    const user = await this.userService.findOne(phone);
+  async validateUser(email: string, password: string): Promise<Users> {
+    const user = await this.userService.findOneByEmail(email);
     if (!user) throw new UnauthorizedException('Invalid credentials');
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) throw new UnauthorizedException('Invalid credentials');
     return user;
   }
 
-  async login(phone: string, password: string) {
-    const user = await this.validateUser(phone, password);
-    const payload = { sub: user.id, phone: user.phone, role: user.role };
+  async login(email: string, password: string) {
+    const user = await this.validateUser(email, password);
+    const payload = { sub: user.id, email: user.email, role: user.role };
     const token = await this.jwtService.signAsync(payload);
     return {
       access_token: token,
@@ -33,32 +38,32 @@ export class AuthService {
   }
 
   async signup(createUserDto: CreateUserDto) {
-    // Vérifie si un utilisateur existe déjà avec ce numéro
+    // Vérifie si un utilisateur existe déjà avec cet email
     try {
-      await this.userService.findOne(createUserDto.phone);
-      throw new ConflictException('Numéro de téléphone déjà utilisé');
+      await this.userService.findOne(createUserDto.email);
+      throw new ConflictException('Adresse e-mail déjà utilisée');
     } catch (err) {
-      // Si NotFoundException, c'est bon, on continue
       if (!(err instanceof NotFoundException)) throw err;
     }
 
-    if (!createUserDto.role || ![UserRole.CLIENT, UserRole.COURSIER].includes(createUserDto.role)) {
-    createUserDto.role = UserRole.CLIENT;
-  }
+    if (!createUserDto.role || ![UserRole.PARENT, UserRole.ELEVE, UserRole.PROFESSEURS].includes(createUserDto.role)) {
+      createUserDto.role = UserRole.PARENT;
+    }
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expires = new Date(Date.now() + 5 * 60 * 1000);
-    this.pendingSignups.set(createUserDto.phone, { dto: createUserDto, otp, expires });
-    // Envoie l’OTP par SMS ici
-    console.log(`OTP pour ${createUserDto.phone} : ${otp}`);
-    return { message: 'Vérifiez votre téléphone pour le code OTP.' };
+    this.pendingSignups.set(createUserDto.email, { dto: createUserDto, otp, expires });
+    // Envoi du code OTP par e-mail (à implémenter)
+    console.log(`OTP pour ${createUserDto.email} : ${otp}`);
+    return { message: 'Vérifiez votre boîte mail pour le code OTP.' };
   }
 
-  async verifyOtp(phone: string, otp: string) {
-    const pending = this.pendingSignups.get(phone);
+  async verifyOtp(email: string, otp: string) {
+    const pending = this.pendingSignups.get(email);
     if (!pending || pending.otp !== otp || pending.expires < new Date()) {
       throw new UnauthorizedException('OTP invalide ou expiré');
     }
-    // Crée l’utilisateur en base
+
     const hashedPassword = await bcrypt.hash(pending.dto.password, 10);
     let user: Users;
     try {
@@ -68,52 +73,54 @@ export class AuthService {
       });
     } catch (error) {
       if (error.code === '23505') {
-        throw new ConflictException('Numéro de téléphone déjà utilisé');
+        throw new ConflictException('Adresse e-mail déjà utilisée');
       }
       throw error;
     }
-    this.pendingSignups.delete(phone);
-    const payload = { sub: user.id, phone: user.phone, role: user.role };
+
+    this.pendingSignups.delete(email);
+    const payload = { sub: user.id, email: user.email, role: user.role };
     const token = await this.jwtService.signAsync(payload);
     return { access_token: token, user };
   }
 
-  async resendOtp(phone: string) {
-  const pending = this.pendingSignups.get(phone);
-  if (!pending) {
-    throw new UnauthorizedException('Aucune inscription en attente pour ce numéro');
+  async resendOtp(email: string) {
+    const pending = this.pendingSignups.get(email);
+    if (!pending) {
+      throw new UnauthorizedException('Aucune inscription en attente pour cet e-mail');
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = new Date(Date.now() + 5 * 60 * 1000);
+    pending.otp = otp;
+    pending.expires = expires;
+    this.pendingSignups.set(email, pending);
+    // Envoi de l’OTP par e-mail (à implémenter)
+    console.log(`Nouvel OTP pour ${email} : ${otp}`);
+    return { message: 'Nouveau code OTP envoyé.' };
   }
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const expires = new Date(Date.now() + 5 * 60 * 1000);
-  pending.otp = otp;
-  pending.expires = expires;
-  this.pendingSignups.set(phone, pending);
-  // Envoie l’OTP par SMS ici
-  console.log(`Nouvel OTP pour ${phone} : ${otp}`);
-  return { message: 'Nouveau code OTP envoyé.' };
-}
 
-async forgotPassword(phone: string) {
-  const user = await this.userService.findOne(phone);
-  if (!user) throw new NotFoundException('Aucun utilisateur avec ce numéro');
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const expires = new Date(Date.now() + 5 * 60 * 1000);
-  // Stocke l’OTP et l’expiration (en mémoire ou en base, ici en mémoire pour démo)
-  this.pendingSignups.set(phone, { dto: { ...user, password: '' }, otp, expires });
-  // Envoie l’OTP par SMS ici
-  console.log(`OTP reset pour ${phone} : ${otp}`);
-  return { message: 'Un code OTP a été envoyé pour réinitialiser le mot de passe.' };
-}
+  async forgotPassword(email: string) {
+    const user = await this.userService.findOne(email);
+    if (!user) throw new NotFoundException('Aucun utilisateur avec cet e-mail');
 
-async resetPassword(phone: string, otp: string, newPassword: string) {
-  const pending = this.pendingSignups.get(phone);
-  if (!pending || pending.otp !== otp || pending.expires < new Date()) {
-    throw new UnauthorizedException('OTP invalide ou expiré');
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = new Date(Date.now() + 5 * 60 * 1000);
+    this.pendingSignups.set(email, { dto: { ...user, password: '' }, otp, expires });
+    // Envoi de l’OTP par e-mail (à implémenter)
+    console.log(`OTP reset pour ${email} : ${otp}`);
+    return { message: 'Un code OTP a été envoyé pour réinitialiser le mot de passe.' };
   }
-  const hashedPassword = await bcrypt.hash(newPassword, 10);
-  await this.userService.updateUser(pending.dto.id, { password: hashedPassword });
-  this.pendingSignups.delete(phone);
-  return { message: 'Mot de passe réinitialisé avec succès.' };
-}
 
+  async resetPassword(email: string, otp: string, newPassword: string) {
+    const pending = this.pendingSignups.get(email);
+    if (!pending || pending.otp !== otp || pending.expires < new Date()) {
+      throw new UnauthorizedException('OTP invalide ou expiré');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.userService.updateUser(pending.dto.id, { password: hashedPassword });
+    this.pendingSignups.delete(email);
+    return { message: 'Mot de passe réinitialisé avec succès.' };
+  }
 }

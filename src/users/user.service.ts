@@ -23,6 +23,14 @@ export class UserService {
     return user;
   }
 
+  async findOneByEmail(email: string): Promise<Users | null> {
+    const user = await this.userRepository.findOneBy({ email });
+    if (!user) {
+      throw new NotFoundException(`User avec email: ${email} introuvable`);
+    }
+    return user;
+  }
+
   async createUser(userData: CreateUserDto): Promise<Users> {
     const newUser = this.userRepository.create(userData);
     return this.userRepository.save(newUser);

@@ -16,6 +16,11 @@ id: number;
   @IsNotEmpty()
   lastName: string;
 
+  @ApiProperty({ example: 'john.doe@example.com' })
+  @IsString()
+  @IsNotEmpty()
+  email: string;
+
   @ApiProperty({ example: 33612345678 })
   @IsNumber()
   phone: string;
@@ -25,9 +30,9 @@ id: number;
   @MinLength(6)
   password: string;
 
-  @ApiPropertyOptional({ enum: [UserRole.CLIENT, UserRole.COURSIER], default: UserRole.CLIENT })
+  @ApiPropertyOptional({ enum: [UserRole.ELEVE, UserRole.PROFESSEURS, UserRole.PARENT], default: UserRole.PARENT })
   @IsOptional()
-  @IsEnum([UserRole.CLIENT, UserRole.COURSIER])
+  @IsEnum([UserRole.ELEVE, UserRole.PROFESSEURS, UserRole.PARENT])
   role?: UserRole;
 
   otpCode?: string;
@@ -46,6 +51,11 @@ export class UpdateUserDto {
   @IsString()
   lastName?: string;
 
+  @ApiPropertyOptional({ example: 'john.doe@example.com' })
+  @IsOptional()
+  @IsString()
+  email?: string;
+
   @ApiPropertyOptional({ example: 33612345678 })
   @IsOptional()
   @IsNumber()
@@ -57,9 +67,9 @@ export class UpdateUserDto {
   @MinLength(6)
   password?: string;
 
-@ApiPropertyOptional({example: 'client' ,enum: [UserRole.CLIENT, UserRole.COURSIER], default: UserRole.CLIENT })
+@ApiPropertyOptional({example: 'eleve' ,enum: [UserRole.ELEVE, UserRole.PROFESSEURS, UserRole.PARENT], default: UserRole.PARENT })
   @IsOptional()
-  @IsEnum([UserRole.CLIENT, UserRole.COURSIER])
+  @IsEnum([UserRole.ELEVE, UserRole.PROFESSEURS, UserRole.PARENT])
   role?: UserRole;
 
 }
@@ -73,6 +83,9 @@ export class UserResponseDto {
 
   @ApiProperty({ example: 'Doe' })
   lastName: string;
+
+  @ApiProperty({ example: 'john.doe@example.com' })
+  email: string;
 
   @ApiProperty({ example: 33612345678 })
   phone: string;
