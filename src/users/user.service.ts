@@ -12,40 +12,52 @@ export class UserService {
   ) {}
 
   findAll(): Promise<Users[]> {
-    return this.userRepository.find();
+    return this.userRepository.find({
+      relations: ['students', 'teachers'],
+    });
   }
 
-  async findOne(phone: string): Promise<Users | null> {
-    const user = await this.userRepository.findOneBy({ phone });
+  async findOneByPhone(phone: string): Promise<Users> {
+    const user = await this.userRepository.findOne({
+      where: { phone },
+      relations: ['students', 'teachers'],
+    });
+
     if (!user) {
-      throw new NotFoundException(`User avec numero: ${phone} introuvable`);
+      throw new NotFoundException(`User avec numéro ${phone} introuvable`);
     }
+
     return user;
   }
 
-  async findOneByEmail(email: string): Promise<Users | null> {
-    const user = await this.userRepository.findOneBy({ email });
-    if (!user) {
-      throw new NotFoundException(`User avec email: ${email} introuvable`);
-    }
-    return user;
+  async findOneByEmail(email: string): Promise<Users> {
+  const user = await this.userRepository.findOne({ where: { email } });
+  if (!user) throw new NotFoundException(`User avec email ${email} introuvable`);
+  return user;
+}
+
+
+  createUser(data: CreateUserDto): Promise<Users> {
+    const user = this.userRepository.create(data);
+    return this.userRepository.save(user);
   }
 
-  async createUser(userData: CreateUserDto): Promise<Users> {
-    const newUser = this.userRepository.create(userData);
-    return this.userRepository.save(newUser);
-  }
-
-  async updateUser(id: number, updateData: UpdateUserDto): Promise<Users> {
+  async updateUser(id: number, data: UpdateUserDto): Promise<Users> {
     const user = await this.userRepository.findOneBy({ id });
+
     if (!user) {
-      throw new NotFoundException(`User avec id: ${id} introuvable`);
+      throw new NotFoundException(`User avec id ${id} introuvable`);
     }
-    Object.assign(user, updateData);
+
+    Object.assign(user, data);
     return this.userRepository.save(user);
   }
 
   async deleteUser(id: number): Promise<void> {
-    await this.userRepository.delete(id);
+    const result = await this.userRepository.delete(id);
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`User avec id ${id} introuvable`);
+    }
   }
 }

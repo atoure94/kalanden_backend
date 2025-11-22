@@ -13,7 +13,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'koliso_secret2025',
+        secret: configService.get<string>('JWT_SECRET') || 'kalanden_secret2025',
         signOptions: { expiresIn: '1d' },
       }),
     }),

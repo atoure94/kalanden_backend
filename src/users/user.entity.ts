@@ -3,9 +3,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+import { Students } from "../students/students.entity"
+import { Teachers } from 'src/teachers/teachers.entity';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -16,42 +19,47 @@ export enum UserRole {
 
 @Entity()
 export class Users {
-  @ApiProperty({ example: 1 })
+  @ApiProperty()
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ApiProperty({ example: 'John' })
+  @ApiProperty()
   @Column()
   firstName: string;
 
-  @ApiProperty({ example: 'Doe' })
+  @ApiProperty()
   @Column()
   lastName: string;
 
-  @ApiProperty({ example: 'john.doe@example.com' })
+  @ApiProperty()
   @Column({ unique: true })
   email: string;
 
-  @ApiProperty({ example: '3361234' })
+  @ApiProperty()
   @Column({ unique: true })
   phone: string;
 
-  @ApiProperty({ example: 'hashedpassword' })
+  @ApiProperty()
   @Column()
   password: string;
 
-  @ApiProperty({ example: 'parent', enum: UserRole })
+  @OneToMany(() => Students, (student) => student.user)
+  students: Students[];
+
+  @OneToMany(() => Teachers, (teacher) => teacher.user)
+  teachers: Teachers[];
+
+  @ApiProperty({ enum: UserRole })
   @Column({ type: 'enum', enum: UserRole, default: UserRole.PARENT })
   role: UserRole;
 
+  @Column({ nullable: true })
+  otpCode?: string;
 
   @Column({ nullable: true })
-otpCode?: string;
+  otpExpiresAt?: Date;
 
-@Column({ nullable: true })
-otpExpiresAt?: Date;
-
-  @ApiProperty({ example: '2024-08-06T12:00:00.000Z' })
+  @ApiProperty()
   @CreateDateColumn()
   createdAt: Date;
 }

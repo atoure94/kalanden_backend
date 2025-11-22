@@ -5,6 +5,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from './users/user.module';
 import { AuthModule } from './authentication/auth.module';
+import { TeachersModule } from './teachers/teachers.module';
+import { AbsencesModule } from './absences/absences.module';
+import { NotesModule } from './notes/notes.module';
+import { ClasseModule } from './classe/classe.module';
+import { LessonsModule } from './lessons/lessons.module';
+import { StudentsModule } from './students/students.module';
 
 @Module({
   imports: [
@@ -24,6 +30,13 @@ import { AuthModule } from './authentication/auth.module';
     }),
     UserModule,
     AuthModule,
+    TeachersModule,
+    StudentsModule,
+    LessonsModule,
+    ClasseModule,
+    NotesModule,
+    AbsencesModule,
+    
   ],
   controllers: [AppController],
   providers: [AppService],

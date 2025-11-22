@@ -1,99 +1,90 @@
-import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, IsNumber, MinLength, IsEnum } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmpty, IsOptional, IsString, MinLength, IsEnum, IsEmail } from 'class-validator';
 import { UserRole } from './user.entity';
 
 export class CreateUserDto {
-@IsNumber()
-id: number;
 
-  @ApiProperty({ example: 'John' })
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   firstName: string;
 
-  @ApiProperty({ example: 'Doe' })
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   lastName: string;
 
-  @ApiProperty({ example: 'john.doe@example.com' })
-  @IsString()
-  @IsNotEmpty()
+  @ApiProperty()
+  @IsEmail()
   email: string;
 
-  @ApiProperty({ example: 33612345678 })
-  @IsNumber()
+  @ApiProperty()
+  @IsString()
   phone: string;
 
-  @ApiProperty({ example: 'strongpassword' })
+  @ApiProperty()
   @IsString()
   @MinLength(6)
   password: string;
 
-  @ApiPropertyOptional({ enum: [UserRole.ELEVE, UserRole.PROFESSEURS, UserRole.PARENT], default: UserRole.PARENT })
+  @ApiPropertyOptional({ enum: UserRole })
   @IsOptional()
-  @IsEnum([UserRole.ELEVE, UserRole.PROFESSEURS, UserRole.PARENT])
+  @IsEnum(UserRole)
   role?: UserRole;
-
-  otpCode?: string;
-  otpExpiresAt?: Date;
 }
 
 export class UpdateUserDto {
 
-  @ApiPropertyOptional({ example: 'John' })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   firstName?: string;
 
-  @ApiPropertyOptional({ example: 'Doe' })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   lastName?: string;
 
-  @ApiPropertyOptional({ example: 'john.doe@example.com' })
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
+  @IsEmail()
   email?: string;
 
-  @ApiPropertyOptional({ example: 33612345678 })
-  @IsOptional()
-  @IsNumber()
-  phone?: string;
-
-  @ApiPropertyOptional({ example: 'newpassword' })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
+  phone?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
   @MinLength(6)
   password?: string;
 
-@ApiPropertyOptional({example: 'eleve' ,enum: [UserRole.ELEVE, UserRole.PROFESSEURS, UserRole.PARENT], default: UserRole.PARENT })
+  @ApiPropertyOptional({ enum: UserRole })
   @IsOptional()
-  @IsEnum([UserRole.ELEVE, UserRole.PROFESSEURS, UserRole.PARENT])
+  @IsEnum(UserRole)
   role?: UserRole;
-
 }
 
 export class UserResponseDto {
-  @ApiProperty({ example: 1 })
+  @ApiProperty()
   id: number;
 
-  @ApiProperty({ example: 'John' })
+  @ApiProperty()
   firstName: string;
 
-  @ApiProperty({ example: 'Doe' })
+  @ApiProperty()
   lastName: string;
 
-  @ApiProperty({ example: 'john.doe@example.com' })
+  @ApiProperty()
   email: string;
 
-  @ApiProperty({ example: 33612345678 })
+  @ApiProperty()
   phone: string;
 
-  @ApiProperty({example: 'client', enum: UserRole })
+  @ApiProperty({ enum: UserRole })
   role: UserRole;
-  
 
-  @ApiProperty({ example: '2024-08-06T12:00:00.000Z' })
+  @ApiProperty()
   createdAt: Date;
 }
